@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, FlatList,
+  View, Text, StyleSheet,
   TouchableOpacity, Alert, ScrollView
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../src/store/useAuthStore';
 import { createBooking } from '../../src/firebase/firestore';
 import { CLUBS, TIME_SLOTS } from '../../src/constants/clubs';
@@ -13,8 +14,14 @@ export default function BookScreen() {
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const user = useAuthStore((state) => state.user);
+  const router = useRouter();
 
-  // Genereer de komende 7 dagen
+  useEffect(() => {
+    if (!user) {
+      router.replace('/login' as any);
+    }
+  }, [user]);
+
   const getDates = () => {
     const dates = [];
     for (let i = 0; i < 7; i++) {
@@ -59,7 +66,6 @@ export default function BookScreen() {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Veld Boeken</Text>
 
-      {/* Club selectie */}
       <Text style={styles.sectionTitle}>Kies een club</Text>
       {CLUBS.map((club) => (
         <TouchableOpacity
@@ -76,7 +82,6 @@ export default function BookScreen() {
         </TouchableOpacity>
       ))}
 
-      {/* Datum selectie */}
       <Text style={styles.sectionTitle}>Kies een datum</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dateScroll}>
         {getDates().map((date) => (
@@ -92,7 +97,6 @@ export default function BookScreen() {
         ))}
       </ScrollView>
 
-      {/* Tijdslot selectie */}
       <Text style={styles.sectionTitle}>Kies een tijdslot</Text>
       <View style={styles.timeGrid}>
         {TIME_SLOTS.map((time) => (
@@ -108,7 +112,6 @@ export default function BookScreen() {
         ))}
       </View>
 
-      {/* Bevestig knop */}
       <TouchableOpacity
         style={[styles.bookButton, loading && styles.bookButtonDisabled]}
         onPress={handleBooking}
