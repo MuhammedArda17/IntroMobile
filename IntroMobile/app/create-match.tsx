@@ -1,17 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   View, Text, TextInput, TouchableOpacity, 
   StyleSheet, ScrollView, Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../src/store/useAuthStore';
-import { createMatch } from '../src/firebase/matches';
-
-const CLUBS = [
-  { id: '1', name: 'Padel Sporthaven Mortsel' },
-  { id: '2', name: 'El Citadel Borsbeek' },
-  { id: '3', name: 'GARRINCHA Antwerpen Zuid' },
-];
+import { createMatch, getClubs } from '../src/firebase/matches';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const TIMES = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00', '19:30', '21:00'];
 
@@ -19,24 +14,27 @@ export default function CreateMatchScreen() {
   const user = useAuthStore((state) => state.user);
   const router = useRouter();
 
-  const [selectedClub, setSelectedClub] = useState<typeof CLUBS[0] | null>(null);
+  const [clubs, setClubs] = useState<any[]>([]);
+  const [selectedClub, setSelectedClub] = useState<any | null>(null);
   const [selectedTime, setSelectedTime] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [levelMin, setLevelMin] = useState('1.0');
   const [levelMax, setLevelMax] = useState('7.0');
   const [isMixed, setIsMixed] = useState(false);
   const [isCompetitive, setIsCompetitive] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const formatDate = (text: string) => {
-    const cleaned = text.replace(/\D/g, '');
-    if (cleaned.length <= 2) return cleaned;
-    if (cleaned.length <= 4) return `${cleaned.slice(0,2)}/${cleaned.slice(2)}`;
-    return `${cleaned.slice(0,2)}/${cleaned.slice(2,4)}/${cleaned.slice(4,8)}`;
-  };
+  useEffect(() => {
+    const fetchClubs = async () => {
+      const data = await getClubs();
+      setClubs(data);
+    };
+    fetchClubs();
+  }, []);
 
   const handleCreate = async () => {
-    if (!selectedClub || !selectedTime || !selectedDate) {
+    if (!selectedClub || !selectedTime) {
       Alert.alert('Fout', 'Vul alle velden in');
       return;
     }
@@ -49,12 +47,9 @@ export default function CreateMatchScreen() {
       return;
     }
 
-    const [day, month, year] = selectedDate.split('/');
-    const matchDate = new Date(`${year}-${month}-${day}`);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
-    if (matchDate < today) {
+    if (selectedDate < today) {
       Alert.alert('Fout', 'De datum moet in de toekomst liggen');
       return;
     }
@@ -66,7 +61,7 @@ export default function CreateMatchScreen() {
         creatorName: user!.name,
         clubId: selectedClub.id,
         clubName: selectedClub.name,
-        date: matchDate,
+        date: selectedDate,
         time: selectedTime,
         levelMin: min,
         levelMax: max,
@@ -90,7 +85,7 @@ export default function CreateMatchScreen() {
       <Text style={styles.title}>Wedstrijd aanmaken</Text>
 
       <Text style={styles.label}>Club</Text>
-      {CLUBS.map((club) => (
+      {clubs.map((club) => (
         <TouchableOpacity
           key={club.id}
           style={[styles.optionButton, selectedClub?.id === club.id && styles.optionSelected]}
@@ -103,14 +98,20 @@ export default function CreateMatchScreen() {
       ))}
 
       <Text style={styles.label}>Datum</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="bijv. 15/03/2025"
-        value={selectedDate}
-        onChangeText={(text) => setSelectedDate(formatDate(text))}
-        keyboardType="numeric"
-        maxLength={10}
-      />
+      <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
+        <Text style={styles.dateText}>{selectedDate.toLocaleDateString('nl-BE')}</Text>
+      </TouchableOpacity>
+      {showDatePicker && (
+        <DateTimePicker
+          value={selectedDate}
+          mode="date"
+          minimumDate={new Date()}
+          onChange={(event, date) => {
+            setShowDatePicker(false);
+            if (date) setSelectedDate(date);
+          }}
+        />
+      )}
 
       <Text style={styles.label}>Tijdstip</Text>
       <View style={styles.timeGrid}>
@@ -218,6 +219,8 @@ const styles = StyleSheet.create({
   toggleSelected: { backgroundColor: '#007AFF', borderColor: '#007AFF' },
   toggleText: { fontSize: 15, color: '#333' },
   toggleTextSelected: { color: '#fff', fontWeight: 'bold' },
+  dateButton: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, marginBottom: 8 },
+  dateText: { fontSize: 16, color: '#333' },
   button: { backgroundColor: '#007AFF', padding: 16, borderRadius: 8, alignItems: 'center', marginTop: 24, marginBottom: 32 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
 });
