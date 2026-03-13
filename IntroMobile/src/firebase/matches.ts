@@ -3,10 +3,15 @@ import {
   collection, 
   addDoc, 
   getDocs,
+  doc,
+  getDoc,
+  updateDoc,
   query,
   where,
-  Timestamp 
+  Timestamp ,
 } from 'firebase/firestore';
+
+
 
 export const getClubs = async () => {
   const snapshot = await getDocs(collection(db, 'clubs'));
@@ -76,4 +81,71 @@ export const createMatch = async (matchData: {
 export const getMatches = async () => {
   const snapshot = await getDocs(collection(db, 'matches'));
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+};
+
+export const getFilteredMatches = async (filters: {
+  levelMin?: number;
+  levelMax?: number;
+  date?: string;
+  clubId?: string;
+  isMixed?: boolean;
+  isCompetitive?: boolean;
+}) => {
+  const snapshot = await getDocs(collection(db, 'matches'));
+  let matches = snapshot.docs.map(doc => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    createdAt: data.createdAt?.seconds 
+      ? new Date(data.createdAt.seconds * 1000).toISOString()
+      : null,
+  };
+}) as any[];
+
+  matches = matches.filter(match => match.status === 'open');
+
+  if (filters.date) {
+    matches = matches.filter(match => match.date === filters.date);
+  }
+  if (filters.clubId) {
+    matches = matches.filter(match => match.clubId === filters.clubId);
+  }
+  if (filters.isMixed !== undefined) {
+    matches = matches.filter(match => match.isMixed === filters.isMixed);
+  }
+  if (filters.isCompetitive !== undefined) {
+    matches = matches.filter(match => match.isCompetitive === filters.isCompetitive);
+  }
+  if (filters.levelMin !== undefined) {
+    matches = matches.filter(match => match.levelMax >= filters.levelMin!);
+  }
+  if (filters.levelMax !== undefined) {
+    matches = matches.filter(match => match.levelMin <= filters.levelMax!);
+  }
+
+  return matches;
+};
+
+export const joinMatch = async (matchId: string, user: { uid: string; name: string; level: number }) => {
+  const matchRef = doc(db, 'matches', matchId);
+  const matchSnap = await getDoc(matchRef);
+
+  if (!matchSnap.exists()) throw new Error('Wedstrijd niet gevonden');
+
+  const matchData = matchSnap.data();
+
+  if (matchData.players.length >= 4) throw new Error('Wedstrijd is al vol');
+  if (matchData.players.some((p: any) => p.uid === user.uid)) throw new Error('Je zit al in deze wedstrijd');
+  if (user.level < matchData.levelMin || user.level > matchData.levelMax) {
+    throw new Error(`Je niveau (${user.level}) past niet binnen de range ${matchData.levelMin}-${matchData.levelMax}`);
+  }
+
+  const updatedPlayers = [...matchData.players, { uid: user.uid, name: user.name }];
+  const newStatus = updatedPlayers.length === 4 ? 'confirmed' : 'open';
+
+  await updateDoc(matchRef, {
+    players: updatedPlayers,
+    status: newStatus,
+  });
 };

@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../src/store/useAuthStore';
-import { createMatch, getClubs } from '../src/firebase/matches';
+import { createMatch, getClubs,getBookedSlots } from '../src/firebase/matches';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 const TIMES = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00', '19:30', '21:00'];
@@ -24,6 +24,15 @@ export default function CreateMatchScreen() {
   const [isMixed, setIsMixed] = useState(false);
   const [isCompetitive, setIsCompetitive] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+
+  useEffect(() => {
+  if (selectedClub && selectedDate) {
+    const dateString = selectedDate.toISOString().split('T')[0];
+    getBookedSlots(selectedClub.id, dateString).then(setBookedSlots);
+    setSelectedTime('');
+  }
+}, [selectedClub, selectedDate]);
 
   useEffect(() => {
     const fetchClubs = async () => {
@@ -115,18 +124,30 @@ export default function CreateMatchScreen() {
 
       <Text style={styles.label}>Tijdstip</Text>
       <View style={styles.timeGrid}>
-        {TIMES.map((time) => (
-          <TouchableOpacity
-            key={time}
-            style={[styles.timeButton, selectedTime === time && styles.timeSelected]}
-            onPress={() => setSelectedTime(time)}
-          >
-            <Text style={[styles.timeText, selectedTime === time && styles.timeTextSelected]}>
-              {time}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+  {TIMES.map((time) => {
+    const isBooked = bookedSlots.includes(time);
+    return (
+      <TouchableOpacity
+        key={time}
+        style={[
+          styles.timeButton,
+          selectedTime === time && styles.timeSelected,
+          isBooked && styles.timeBooked
+        ]}
+        onPress={() => !isBooked && setSelectedTime(time)}
+        disabled={isBooked}
+      >
+        <Text style={[
+          styles.timeText,
+          selectedTime === time && styles.timeTextSelected,
+          isBooked && styles.timeTextBooked
+        ]}>
+          {time}
+        </Text>
+      </TouchableOpacity>
+    );
+  })}
+</View>
 
       <Text style={styles.label}>Niveau range</Text>
       <View style={styles.levelContainer}>
@@ -223,4 +244,6 @@ const styles = StyleSheet.create({
   dateText: { fontSize: 16, color: '#333' },
   button: { backgroundColor: '#007AFF', padding: 16, borderRadius: 8, alignItems: 'center', marginTop: 24, marginBottom: 32 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  timeBooked: { backgroundColor: '#f0f0f0', borderColor: '#ddd' },
+timeTextBooked: { color: '#aaa' },
 });
