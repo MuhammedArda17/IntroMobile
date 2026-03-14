@@ -179,24 +179,40 @@ export default function SearchMatchScreen() {
               ))}
             </View>
             {match.creatorId === user?.uid ? (
-  <View style={styles.ownerBadge}>
-    <Text style={styles.ownerText}>🏓 Jouw wedstrijd</Text>
-  </View>
-) : !match.players.some((p: any) => p.uid === user?.uid) ? (
-  <TouchableOpacity
-    style={[styles.joinButton, joining === match.id && styles.joinButtonDisabled]}
-    onPress={() => handleJoin(match.id)}
-    disabled={joining === match.id}
-  >
-    <Text style={styles.joinButtonText}>
-      {joining === match.id ? 'Bezig...' : 'Inschrijven'}
-    </Text>
-  </TouchableOpacity>
-) : (
-  <View style={styles.joinedBadge}>
-    <Text style={styles.joinedText}>✅ Je bent ingeschreven</Text>
-  </View>
-)}
+              <View>
+                <View style={styles.ownerBadge}>
+                  <Text style={styles.ownerText}>🏓 Jouw wedstrijd</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.chatButton}
+                  onPress={() => router.push(`/chat/${match.id}` as any)}
+                >
+                  <Text style={styles.chatButtonText}>💬 Chat openen</Text>
+                </TouchableOpacity>
+              </View>
+            ) : !match.players.some((p: any) => p.uid === user?.uid) ? (
+              <TouchableOpacity
+                style={[styles.joinButton, joining === match.id && styles.joinButtonDisabled]}
+                onPress={() => handleJoin(match.id)}
+                disabled={joining === match.id}
+              >
+                <Text style={styles.joinButtonText}>
+                  {joining === match.id ? 'Bezig...' : 'Inschrijven'}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <View>
+                <View style={styles.joinedBadge}>
+                  <Text style={styles.joinedText}>✅ Je bent ingeschreven</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.chatButton}
+                  onPress={() => router.push(`/chat/${match.id}` as any)}
+                >
+                  <Text style={styles.chatButtonText}>💬 Chat openen</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         ))
       )}
@@ -234,12 +250,14 @@ const styles = StyleSheet.create({
   playersRow: { flexDirection: 'row', gap: 8, marginTop: 12, marginBottom: 12 },
   playerSlot: { flex: 1, padding: 8, borderRadius: 8, borderWidth: 1, borderColor: '#ddd', alignItems: 'center', backgroundColor: '#f9f9f9' },
   playerSlotFilled: { backgroundColor: '#e8f4ff', borderColor: '#007AFF' },
+  playerName: { fontSize: 12, color: '#333', textAlign: 'center' },
   ownerBadge: { backgroundColor: '#fff3e0', padding: 10, borderRadius: 8, alignItems: 'center' },
   ownerText: { color: '#ff9500', fontWeight: '600' },
-  playerName: { fontSize: 12, color: '#333', textAlign: 'center' },
   joinButton: { backgroundColor: '#007AFF', padding: 12, borderRadius: 8, alignItems: 'center' },
   joinButtonDisabled: { backgroundColor: '#aaa' },
   joinButtonText: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
   joinedBadge: { backgroundColor: '#e8f4ff', padding: 10, borderRadius: 8, alignItems: 'center' },
   joinedText: { color: '#007AFF', fontWeight: '600' },
+  chatButton: { backgroundColor: '#34C759', padding: 12, borderRadius: 8, alignItems: 'center', marginTop: 8 },
+  chatButtonText: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
 });
