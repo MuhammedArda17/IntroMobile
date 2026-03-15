@@ -127,6 +127,47 @@ export const getFilteredMatches = async (filters: {
   return matches;
 };
 
+export const submitMatchResult = async (
+  matchId: string,
+  sets: { team1: number; team2: number }[],
+  winner: 'team1' | 'team2'
+) => {
+  const matchRef = doc(db, 'matches', matchId);
+  await updateDoc(matchRef, {
+    status: 'finished',
+    result: { sets, winner },
+    finishedAt: Timestamp.now(),
+  });
+};
+
+export const updatePlayerLevels = async (
+  players: { uid: string; newLevel: number }[]
+) => {
+  for (const player of players) {
+    const userRef = doc(db, 'users', player.uid);
+    await updateDoc(userRef, { level: player.newLevel });
+  }
+};
+
+export const getConfirmedMatches = async (userId: string) => {
+  const snapshot = await getDocs(collection(db, 'matches'));
+  return snapshot.docs
+    .map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.seconds
+          ? new Date(data.createdAt.seconds * 1000).toISOString()
+          : null,
+      };
+    })
+    .filter((match: any) =>
+      match.status === 'confirmed' &&
+      match.players.some((p: any) => p.uid === userId)
+    ) as any[];
+};
+
 export const joinMatch = async (matchId: string, user: { uid: string; name: string; level: number }) => {
   const matchRef = doc(db, 'matches', matchId);
   const matchSnap = await getDoc(matchRef);

@@ -23,6 +23,15 @@ export default function HomeScreen() {
       >
         <Text style={styles.buttonText}>Wedstrijd zoeken</Text>
       </TouchableOpacity>
+
+      <View style={styles.spacing} />
+
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => router.push('/results' as any)}
+      >
+        <Text style={styles.buttonText}>Resultaten invoeren</Text>
+      </TouchableOpacity>
     </View>
   );
 }

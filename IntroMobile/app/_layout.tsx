@@ -11,6 +11,7 @@ export default function RootLayout() {
       <Stack.Screen name="register" options={{ title: 'Registreren' }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="chat/[matchId]" options={{ headerShown: false }} />
+      <Stack.Screen name="results" options={{ title: 'Resultaten' }} />
     </Stack>
   );
 }
