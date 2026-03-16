@@ -8,7 +8,7 @@ import { useAuthStore } from '../src/store/useAuthStore';
 import { createMatch, getClubs,getBookedSlots } from '../src/firebase/matches';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-const TIMES = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00', '19:30', '21:00'];
+const TIMES = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00','19:00','20:00', '21:00'];
 
 export default function CreateMatchScreen() {
   const user = useAuthStore((state) => state.user);
