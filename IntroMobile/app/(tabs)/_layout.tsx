@@ -1,6 +1,10 @@
+import { Text } from 'react-native';
 import { Tabs } from 'expo-router';
+import { useAuthStore } from '../../src/store/useAuthStore';
 
 export default function TabLayout() {
+  const user = useAuthStore((state) => state.user);
+
   return (
     <Tabs
       screenOptions={{
@@ -41,6 +45,17 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <Text style={{ fontSize: 20 }}>📅</Text>
           ),
+          href: user ? undefined : null
+        }}
+      />
+      <Tabs.Screen
+        name="leaderboard"
+        options={{
+          title: 'Leaderboard',
+          tabBarLabel: '🏆 Ranking',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ fontSize: 20 }}>🏆</Text>
+          ),
         }}
       />
       <Tabs.Screen
@@ -56,5 +71,3 @@ export default function TabLayout() {
     </Tabs>
   );
 }
-
-import { Text } from 'react-native';
