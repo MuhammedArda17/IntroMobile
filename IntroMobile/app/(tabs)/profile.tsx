@@ -50,12 +50,12 @@ export default function ProfileScreen() {
       try {
         const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
         
-        // Opslaan in Firestore
+        
         await updateDoc(doc(db, 'users', user!.uid), {
           photoURL: base64Image
         });
 
-        // Update local store
+        
         setUser({ ...user!, photoURL: base64Image } as any);
         Alert.alert('Gelukt!', 'Profielfoto bijgewerkt!');
       } catch (error) {
