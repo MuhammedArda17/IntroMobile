@@ -52,7 +52,7 @@ export default function TabLayout() {
         name="leaderboard"
         options={{
           title: 'Leaderboard',
-          tabBarLabel: '🏆 Ranking',
+          tabBarLabel: ' Ranking',
           tabBarIcon: ({ color }) => (
             <Text style={{ fontSize: 20 }}>🏆</Text>
           ),
